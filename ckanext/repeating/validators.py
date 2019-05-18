@@ -65,7 +65,8 @@ def repeating_text(key, data, errors, context):
             continue
         if not text:
             continue
-        index = name.rsplit('-', 1)[1]
+        matches = re.findall(re.escape(prefix) + r"\[(\d*)\]\[(\w*)\]", name)
+        index = matches[0][0]
         try:
             index = int(index)
         except ValueError:
