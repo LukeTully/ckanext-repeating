@@ -1,5 +1,5 @@
 import json
-
+import re
 from ckan.plugins.toolkit import missing, _
 
 def repeating_text(key, data, errors, context):
@@ -57,7 +57,7 @@ def repeating_text(key, data, errors, context):
 
     # 3. separate fields
     found = {}
-    prefix = key[-1] + '-'
+    prefix = key[-1] + '['
     extras = data.get(key[:-1] + ('__extras',), {})
 
     for name, text in extras.iteritems():
@@ -65,13 +65,18 @@ def repeating_text(key, data, errors, context):
             continue
         if not text:
             continue
-        matches = re.findall(re.escape(prefix) + r"\[(\d*)\]\[(\w*)\]", name)
+        matches = re.findall(re.escape(prefix) + r"(\d*)\]\[(\w*)\]", name)
         index = matches[0][0]
+        prop = matches[0][1]
         try:
             index = int(index)
         except ValueError:
             continue
-        found[index] = text
+        try: 
+            found[index][prop] = text
+        except KeyError:
+            found[index] = {}
+            found[index][prop] = text
 
     out = [found[i] for i in sorted(found)]
     data[key] = json.dumps(out)
