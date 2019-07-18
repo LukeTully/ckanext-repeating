@@ -60,11 +60,13 @@ def repeating_text(key, data, errors, context):
     prefix = key[-1] + '['
     extras = data.get(key[:-1] + ('__extras',), {})
 
+    to_remove = []
     for name, text in extras.iteritems():
         if not name.startswith(prefix):
             continue
         if not text:
             continue
+        to_remove.append(name)
         matches = re.findall(re.escape(prefix) + r"(\d*)\]\[(\w*)\]", name)
         index = matches[0][0]
         prop = matches[0][1]
@@ -77,7 +79,13 @@ def repeating_text(key, data, errors, context):
         except KeyError:
             found[index] = {}
             found[index][prop] = text
-
+            
+    for extra in to_remove:
+        data.get(key[:-1] + ('__extras',), {}).pop(extra)
+        if ('__junk',) in data:
+            data.get(('__junk',)).pop(extra)
+            # TODO: Check to make sure this is the right key that I'm popping
+            # Also double check that there isn't a pre-existing mechanism for handling extras detritis
     out = [found[i] for i in sorted(found)]
     data[key] = json.dumps(out)
 
